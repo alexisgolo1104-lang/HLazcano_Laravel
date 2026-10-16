@@ -485,7 +485,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 
-INSERT INTO `usuarios` VALUES (1,'Hernán Meneses','superadmin@hlazcano.com','12345678','superadmin',1,1,NULL,NULL,'2026-04-21'),(2,'Gerente S1','admin1@hlazcano.com','12345678','admin',1,1,NULL,NULL,'2026-04-21'),(3,'Gerente S2','admin2@hlazcano.com','12345678','admin',2,1,NULL,NULL,'2026-04-21'),(4,'Ana Ramírez','emp1@hlazcano.com','12345678','empleado',1,1,NULL,NULL,'2026-04-21'),(5,'Carlos Mendoza','emp2@hlazcano.com','12345678','empleado',2,1,NULL,NULL,'2026-04-21');
+INSERT INTO `usuarios` VALUES (1,'Hernán Meneses','superadmin@hlazcano.com','12345678','superadmin',1,1,NULL,NULL,'2026-04-21'),(2,'Gerente S1','admin1@hlazcano.com','12345678','admin',1,1,NULL,NULL,'2026-04-21'),(3,'Gerente S2','admin2@hlazcano.com','12345678','admin',2,1,NULL,NULL,'2026-04-21'),(4,'Ana Ramírez','emp1@hlazcano.com','12345678','empleado',1,1,NULL,NULL,'2026-04-21'),(5,'Carlos Mendoza','emp2@hlazcano.com','12345678','empleado',2,1,NULL,NULL,'2026-04-21'),(6,'Tomas Gonzales','alexisgl0104@gmail.com','Tomas123','admin',2,1,NULL,NULL,'2026-04-21');
 
 UNLOCK TABLES;
 
