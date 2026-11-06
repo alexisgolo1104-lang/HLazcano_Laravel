@@ -11,9 +11,9 @@ class PdfController extends Controller
     public function ticket(int $id): View
     {
         $usuario = Auth::user();
-        $ticket = (new PdfModel())->getTicketCompleto(
+        $ticket = (new PdfModel)->getTicketCompleto(
             $id,
-            $usuario->rol === 'superadmin' ? null : (int) $usuario->id_tienda
+            (int) $usuario->id_tienda
         );
 
         abort_if(! $ticket, 404);

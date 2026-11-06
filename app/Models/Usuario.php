@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class Usuario extends Authenticatable
 {
+    use Notifiable;
+
     protected $table = 'usuarios';
 
     protected $primaryKey = 'id_usuario';
@@ -16,10 +19,14 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'nombre',
         'correo',
+        'telefono',
+        'sueldo',
         'contrasena',
         'rol',
         'id_tienda',
         'activo',
+        'debe_cambiar_contrasena',
+        'creado_en',
     ];
 
     protected $hidden = [
@@ -30,6 +37,7 @@ class Usuario extends Authenticatable
     {
         return [
             'activo' => 'boolean',
+            'debe_cambiar_contrasena' => 'boolean',
         ];
     }
 
@@ -41,5 +49,15 @@ class Usuario extends Authenticatable
     public function getAuthPasswordName(): string
     {
         return 'contrasena';
+    }
+
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->correo;
+    }
+
+    public function routeNotificationForMail(): string
+    {
+        return $this->correo;
     }
 }

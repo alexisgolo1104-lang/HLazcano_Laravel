@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\InventoryAlertService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +22,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.app', function ($view): void {
+            $usuario = Auth::user();
+            $alertasNuevas = $usuario
+                ? app(InventoryAlertService::class)->syncStore((int) $usuario->id_tienda)
+                : 0;
+
+            $view->with('alertasNuevas', $alertasNuevas);
+        });
     }
 }

@@ -11,7 +11,7 @@
   <section class="card">
     <div class="card-title">Exportar respaldo</div>
     <p class="text-muted mb-12">Último respaldo exitoso: {{ $ultimo ? \Illuminate\Support\Carbon::parse($ultimo)->format('d/m/Y H:i') : 'Nunca' }}</p>
-    <form method="POST" action="{{ route('respaldos.exportar') }}">
+    <form method="POST" action="{{ route('respaldos.exportar') }}" data-confirm-skip>
       @csrf
       <button class="btn btn-primary" type="submit">Exportar base de datos (ZIP)</button>
     </form>
@@ -22,7 +22,7 @@
     <div class="notice notice-danger mb-12" role="alert">
       La restauración reemplaza todas las tablas y sus datos actuales. Esta acción no se puede deshacer.
     </div>
-    <form method="POST" action="{{ route('respaldos.importar') }}" enctype="multipart/form-data" onsubmit="return confirmRestore()">
+    <form method="POST" action="{{ route('respaldos.importar') }}" enctype="multipart/form-data" data-confirm="La restauración reemplazará la base de datos actual y cerrará tu sesión. ¿Continuar?">
       @csrf
       <div class="form-group">
         <label class="form-label" for="archivo">Archivo ZIP generado por esta aplicación</label>
@@ -61,11 +61,3 @@
   </div>
 </section>
 @endsection
-
-@push('scripts')
-<script>
-  function confirmRestore() {
-    return window.confirm('La restauración reemplazará la base de datos actual y cerrará tu sesión. ¿Continuar?');
-  }
-</script>
-@endpush

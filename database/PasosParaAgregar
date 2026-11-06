@@ -1,0 +1,23 @@
+
+**********************************
+*     Crearla en Laragon         *
+**********************************
+//Forma 1
+
+Opción 1: HeidiSQL (viene con Laragon)
+
+En Laragon pulsa el botón Base de datos. Se abre HeidiSQL con la conexión lista (usuario root, normalmente sin contraseña).
+Clic derecho en el panel izquierdo → Crear nuevo → Base de datos y ponle el nombre hlazcano_db.
+Selecciona esa base de datos.
+Menú Archivo → Ejecutar archivo SQL y elige hlazcanodb.sql.
+Cuando termine, pulsa F5 para refrescar y verás tus tablas.
+
+//Forma 2
+-Clic en Terminal en Laragon.
+-Crea la base de datos:
+
+mysql -u root -e "CREATE DATABASE hlazcano_db"
+
+-Importa el archivo (ajusta la ruta):
+
+mysql -u root hlazcano_db < C:\ruta\hlazcanodb.sql

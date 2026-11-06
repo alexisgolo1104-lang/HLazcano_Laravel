@@ -95,4 +95,43 @@ class VentasTest extends TestCase
 
         $this->assertDatabaseHas('productos', ['id_producto' => 1, 'stock_actual' => 5]);
     }
+
+    public function test_ticket_renders_as_a_standalone_thermal_receipt(): void
+    {
+        $response = $this->view('panel.ticket', [
+            'venta' => (object) [
+                'folio' => 'V-001',
+                'fecha' => '2026-10-26',
+                'sucursal_nombre' => 'Sucursal 1 — Santa María Texmelucan',
+                'sucursal_direccion' => null,
+                'sucursal_telefono' => null,
+                'cliente_nombre' => 'Cliente de prueba',
+                'cliente_telefono' => '2221234567',
+                'cliente_correo' => 'cliente@example.test',
+                'vendedor' => 'Vendedor',
+                'subtotal' => 100,
+                'descuento' => 20,
+                'total' => 100,
+                'notas' => null,
+            ],
+            'detalles' => collect(),
+        ]);
+
+        $response->assertSee('<!DOCTYPE html>', false)
+            ->assertSee('size:80mm auto', false)
+            ->assertSee('Ticket V-001')
+            ->assertSee('Cliente de prueba')
+            ->assertSee('Total: $100.00')
+            ->assertDontSee('Descuento')
+            ->assertDontSee('Subtotal:')
+            ->assertDontSee('2221234567')
+            ->assertDontSee('cliente@example.test')
+            ->assertDontSee('Tel. cliente:')
+            ->assertDontSee('Correo:')
+            ->assertDontSee('Sucursal 1')
+            ->assertSee('window.opener.focus()', false)
+            ->assertSee('window.close()', false)
+            ->assertDontSee('class="app"', false)
+            ->assertDontSee('hlazcano.css', false);
+    }
 }

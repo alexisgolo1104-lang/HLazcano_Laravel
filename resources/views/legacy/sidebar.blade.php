@@ -109,7 +109,10 @@
           <div class="sb-name" id="sb-name">Hernán Meneses</div>
           <div class="sb-role" id="sb-role">Superadmin</div>
         </div>
-        <button class="sb-logout" onclick="doLogout()">↩</button>
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button class="sb-logout" type="submit" title="Cerrar sesión">↩</button>
+        </form>
       </div>
     </div>
   </nav>

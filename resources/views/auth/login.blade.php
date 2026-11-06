@@ -15,5 +15,8 @@
   </div>
   <button class="btn btn-primary w-full" type="submit" style="justify-content:center">Ingresar al sistema</button>
 </form>
-<div class="auth-links"><a href="{{ route('register') }}">Crear una cuenta</a></div>
+<div class="auth-links">
+  <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
+  <a href="{{ route('register') }}">Crear una cuenta</a>
+</div>
 @endsection

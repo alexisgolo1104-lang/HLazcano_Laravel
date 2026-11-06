@@ -20,9 +20,7 @@ class DashboardController extends Controller
                     });
             });
 
-        if ($usuario->rol !== 'superadmin') {
-            $ventas->where('v.id_tienda', $usuario->id_tienda);
-        }
+        $ventas->where('v.id_tienda', $usuario->id_tienda);
 
         $inicioMes = now()->startOfMonth()->toDateString();
         $finMes = now()->endOfMonth()->toDateString();
@@ -33,42 +31,92 @@ class DashboardController extends Controller
             ->whereBetween('v.fecha', [$inicioMes, $finMes])
             ->count();
 
-        $productos = DB::table('productos')->where('activo', 1);
+        $fechaFin = now()->startOfDay();
+        $fechaInicio = $fechaFin->copy()->subDays(6);
+        $ventasAgrupadas = (clone $ventas)
+            ->whereBetween('v.fecha', [$fechaInicio->toDateString(), $fechaFin->toDateString()])
+            ->select('v.fecha', DB::raw('SUM(v.total) as total'), DB::raw('COUNT(*) as cantidad'))
+            ->groupBy('v.fecha')
+            ->get()
+            ->keyBy(fn ($venta) => (string) $venta->fecha);
+        $ventasPorDia = collect(range(6, 0))->map(function (int $dias) use ($fechaFin, $ventasAgrupadas) {
+            $fecha = $fechaFin->copy()->subDays($dias);
+            $venta = $ventasAgrupadas->get($fecha->toDateString());
+
+            return [
+                'fecha' => $fecha->toDateString(),
+                'etiqueta' => $fecha->format('d/m'),
+                'total' => (float) ($venta->total ?? 0),
+                'cantidad' => (int) ($venta->cantidad ?? 0),
+            ];
+        })->all();
+
+        $productos = DB::table('productos')->where('productos.activo', 1);
         $clientes = DB::table('clientes')->where('activo', 1);
-        $usuarios = DB::table('usuarios')->where('activo', 1);
         $alertas = DB::table('productos')
-            ->where('activo', 1)
-            ->whereColumn('stock_actual', '<=', 'stock_minimo');
+            ->where('productos.activo', 1)
+            ->whereColumn('productos.stock_actual', '<=', 'productos.stock_minimo');
 
-        if ($usuario->rol !== 'superadmin') {
-            $productos->where('id_tienda', $usuario->id_tienda);
-            $clientes->where('id_tienda', $usuario->id_tienda);
-            $usuarios->where('id_tienda', $usuario->id_tienda);
-            $alertas->where('id_tienda', $usuario->id_tienda);
-        }
+        $productos->where('productos.id_tienda', $usuario->id_tienda);
+        $clientes->where('id_tienda', $usuario->id_tienda);
+        $alertas->where('productos.id_tienda', $usuario->id_tienda);
 
-        $ultimasVentas = (clone $ventas)
-            ->leftJoin('clientes as c', 'v.id_cliente', '=', 'c.id_cliente')
-            ->leftJoin('tiendas as t', 'v.id_tienda', '=', 't.id_tienda')
-            ->orderByDesc('v.id_venta')
-            ->limit(8)
+        $productosConStock = (clone $productos)
+            ->leftJoin('catalogo_productos as c', 'productos.id_catalogo', '=', 'c.id_catalogo')
+            ->leftJoin('unidades as u', 'productos.id_unidad', '=', 'u.id_unidad')
+            ->orderByDesc('productos.stock_actual')
+            ->limit(6)
             ->get([
-                'v.id_venta',
-                'v.folio',
-                'v.fecha',
-                'v.total',
-                'c.nombre as cliente',
-                't.nombre as tienda',
+                'productos.stock_actual',
+                'c.nombre',
+                'productos.presentacion',
+                'u.codigo as unidad',
             ]);
+
+        $alertasProductos = (clone $alertas)
+            ->leftJoin('catalogo_productos as c', 'productos.id_catalogo', '=', 'c.id_catalogo')
+            ->leftJoin('unidades as u', 'productos.id_unidad', '=', 'u.id_unidad')
+            ->orderBy('productos.stock_actual')
+            ->limit(4)
+            ->get([
+                'productos.stock_actual',
+                'productos.stock_minimo',
+                'productos.presentacion',
+                'c.nombre',
+                'u.codigo as unidad',
+            ]);
+
+        $clientesPorTipo = (clone $clientes)
+            ->select('tipo_cliente')
+            ->get()
+            ->countBy(function ($cliente) {
+                $tipo = trim((string) $cliente->tipo_cliente);
+
+                return $tipo !== '' ? $tipo : 'Sin categoría';
+            });
+        $coloresClientes = ['#2563EB', '#F59E0B', '#10B981', '#8B5CF6', '#EF4444'];
+        $clientesPorTipo = $clientesPorTipo
+            ->sortDesc()
+            ->map(fn (int $cantidad, string $tipo) => ['tipo' => $tipo, 'cantidad' => $cantidad])
+            ->values()
+            ->map(function (array $cliente, int $indice) use ($coloresClientes) {
+                $cliente['color'] = $coloresClientes[$indice % count($coloresClientes)];
+
+                return $cliente;
+            })
+            ->values()
+            ->all();
 
         return view('dashboard', [
             'ventasMes' => $ventasMes,
             'ventasCount' => $ventasCount,
             'productosCount' => $productos->count(),
             'clientesCount' => $clientes->count(),
-            'usuariosCount' => $usuarios->count(),
             'alertasCount' => $alertas->count(),
-            'ultimasVentas' => $ultimasVentas,
+            'ventasPorDia' => $ventasPorDia,
+            'productosConStock' => $productosConStock,
+            'clientesPorTipo' => $clientesPorTipo,
+            'alertasProductos' => $alertasProductos,
         ]);
     }
 }

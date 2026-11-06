@@ -6,6 +6,7 @@ use App\Models\LogRespaldo;
 use App\Services\DatabaseBackupService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -89,6 +90,9 @@ class RespaldoController extends Controller
 
         try {
             $resultado = $backupService->restore($validated['archivo'], (int) $usuario->id_usuario);
+            if (Artisan::call('migrate', ['--force' => true]) !== 0) {
+                throw new \RuntimeException('No se pudieron aplicar las migraciones a la base restaurada.');
+            }
         } catch (Throwable $exception) {
             try {
                 LogRespaldo::query()->create([

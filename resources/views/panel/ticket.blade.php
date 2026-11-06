@@ -1,30 +1,66 @@
-@extends('layouts.app')
-
-@section('titulo', 'Ticket de venta')
-
-@section('contenido')
-<div class="flex justify-between items-center mb-12 no-print">
-  <a class="btn" href="{{ route('ventas') }}">← Volver a ventas</a>
-  <button class="btn btn-primary" type="button" onclick="window.print()">Imprimir / Guardar como PDF</button>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ticket {{ $venta->folio }} · HLazcano</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f4f6;color:#111;font-family:Arial,sans-serif;font-size:12px;line-height:1.4}
+    .ticket-actions{display:flex;justify-content:center;gap:10px;padding:18px}
+    .ticket-actions a,.ticket-actions button{padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#111;text-decoration:none;font-size:13px;cursor:pointer}
+    .ticket-actions button{background:#2563eb;border-color:#2563eb;color:#fff}
+    .ticket-paper{width:80mm;margin:0 auto 24px;padding:5mm;background:#fff;box-shadow:0 1px 8px #0002}
+    .ticket-header,.ticket-thanks{text-align:center}
+    .ticket-header h1{margin:0 0 4px;font-size:16px}
+    .ticket-header h2{margin:12px 0 0;font-size:13px}
+    .ticket-meta{display:grid;gap:3px;margin:14px 0}
+    .ticket-divider{border:0;border-top:1px dashed #777;margin:10px 0}
+    .ticket-items{width:100%;border-collapse:collapse;table-layout:fixed;font-size:11px}
+    .ticket-items th,.ticket-items td{padding:5px 2px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+    .ticket-items th{border-bottom:1px solid #777}
+    .ticket-items th:first-child,.ticket-items td:first-child{width:19%}
+    .ticket-items th:nth-child(2),.ticket-items td:nth-child(2){width:39%}
+    .ticket-items th:nth-child(3),.ticket-items td:nth-child(3){width:20%;text-align:right}
+    .ticket-items th:last-child,.ticket-items td:last-child{width:22%;text-align:right}
+    .ticket-total{display:grid;gap:4px;margin-top:10px;text-align:right}
+    .ticket-total strong{font-size:14px}
+    .ticket-notes{margin-top:12px;overflow-wrap:anywhere}
+    .ticket-thanks{margin:18px 0 2px;font-weight:600}
+    @media print{
+      @page{size:80mm auto;margin:0}
+      body{width:80mm;background:#fff;font-size:11px}
+      .ticket-actions{display:none}
+      .ticket-paper{width:80mm;margin:0;padding:4mm;box-shadow:none}
+      .ticket-items tr,.ticket-total,.ticket-meta{break-inside:avoid}
+    }
+    @media screen and (max-width:420px){
+      .ticket-paper{width:100%;max-width:80mm}
+      .ticket-actions{padding:12px}
+    }
+  </style>
+</head>
+<body>
+<div class="ticket-actions">
+  <a href="{{ route('ventas') }}" onclick="if (window.opener && !window.opener.closed) { window.opener.focus(); window.close(); if (!window.closed) window.location.href = this.href; return false; }">← Volver a ventas</a>
+  <button type="button" onclick="window.print()">Imprimir ticket</button>
 </div>
-<article class="card ticket-document">
-  <header class="ticket-header">
-    <h1>HLazcano — Prendas de Punto</h1>
-    <div>{{ $venta->sucursal_nombre }}</div>
-    <div>{{ $venta->sucursal_direccion }}</div>
-    @if ($venta->sucursal_telefono)<div>Tel. {{ $venta->sucursal_telefono }}</div>@endif
-    <h2>Ticket {{ $venta->folio }}</h2>
-  </header>
-  <div class="ticket-meta">
-    <div>Fecha: {{ \Illuminate\Support\Carbon::parse($venta->fecha)->format('d/m/Y') }}</div>
-    <div>Cliente: {{ $venta->cliente_nombre ?? 'Cliente General' }}</div>
-    @if ($venta->cliente_telefono)<div>Tel. cliente: {{ $venta->cliente_telefono }}</div>@endif
-    @if ($venta->cliente_correo)<div>Correo: {{ $venta->cliente_correo }}</div>@endif
-    <div>Atendió: {{ $venta->vendedor }}</div>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Cantidad</th><th>Producto</th><th>Precio</th><th>Importe</th></tr></thead>
+<main class="ticket-paper">
+  <article>
+    <header class="ticket-header">
+      <h1>HLazcano — Prendas de Punto</h1>
+      @if ($venta->sucursal_direccion)<div>{{ $venta->sucursal_direccion }}</div>@endif
+      @if ($venta->sucursal_telefono)<div>Tel. {{ $venta->sucursal_telefono }}</div>@endif
+      <h2>Ticket {{ $venta->folio }}</h2>
+    </header>
+    <div class="ticket-meta">
+      <div>Fecha: {{ \Illuminate\Support\Carbon::parse($venta->fecha)->format('d/m/Y') }}</div>
+      <div>Cliente: {{ $venta->cliente_nombre ?? 'Cliente General' }}</div>
+      <div>Atendió: {{ $venta->vendedor }}</div>
+    </div>
+    <hr class="ticket-divider">
+    <table class="ticket-items">
+      <thead><tr><th>Cant.</th><th>Producto</th><th>Precio</th><th>Importe</th></tr></thead>
       <tbody>
         @foreach ($detalles as $detalle)
           <tr>
@@ -36,32 +72,13 @@
         @endforeach
       </tbody>
     </table>
-  </div>
-  <div class="ticket-total">
-    <div>Subtotal: ${{ number_format((float) $venta->subtotal, 2) }}</div>
-    @if ((float) $venta->descuento > 0)
-      <div>Descuento ({{ number_format((float) $venta->descuento, 2) }}%): -${{ number_format((float) $venta->subtotal * (float) $venta->descuento / 100, 2) }}</div>
-    @endif
-    <strong>Total: ${{ number_format((float) $venta->total, 2) }}</strong>
-  </div>
-  @if ($venta->notas)<p class="text-muted">Notas: {{ $venta->notas }}</p>@endif
-  <p class="ticket-thanks">Gracias por su compra</p>
-</article>
-@endsection
-
-@push('estilos')
-<style>
-  .ticket-document{max-width:760px;margin:0 auto;background:#fff}
-  .ticket-header,.ticket-thanks{text-align:center}
-  .ticket-header h1{font-size:22px;margin-bottom:6px}
-  .ticket-header h2{font-size:16px;margin-top:14px}
-  .ticket-meta,.ticket-total{display:grid;gap:6px;margin:20px 0}
-  .ticket-total{text-align:right}
-  .ticket-thanks{margin-top:28px}
-  @media print{
-    .sidebar,.topbar,.no-print{display:none!important}
-    .app,.main-area,.content{display:block;height:auto;overflow:visible;padding:0}
-    .ticket-document{max-width:none;border:0;box-shadow:none}
-  }
-</style>
-@endpush
+    <hr class="ticket-divider">
+    <div class="ticket-total">
+      <strong>Total: ${{ number_format((float) $venta->total, 2) }}</strong>
+    </div>
+    @if ($venta->notas)<p class="ticket-notes">Notas: {{ $venta->notas }}</p>@endif
+    <p class="ticket-thanks">Gracias por su compra</p>
+  </article>
+</main>
+</body>
+</html>

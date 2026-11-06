@@ -6,20 +6,17 @@ use Illuminate\Support\Facades\DB;
 
 class PdfModel
 {
-    public function getTicketCompleto(int $id, ?int $storeId = null): ?array
+    public function getTicketCompleto(int $id, int $storeId): ?array
     {
         $venta = DB::table('ventas as v')
             ->leftJoin('clientes as c', 'v.id_cliente', '=', 'c.id_cliente')
             ->leftJoin('tiendas as t', 'v.id_tienda', '=', 't.id_tienda')
             ->leftJoin('usuarios as u', 'v.id_usuario', '=', 'u.id_usuario')
             ->where('v.id_venta', $id)
-            ->when($storeId, fn ($query) => $query->where('v.id_tienda', $storeId))
+            ->where('v.id_tienda', $storeId)
             ->first([
                 'v.*',
                 'c.nombre as cliente_nombre',
-                'c.correo as cliente_correo',
-                'c.telefono as cliente_telefono',
-                't.nombre as sucursal_nombre',
                 't.direccion as sucursal_direccion',
                 't.telefono as sucursal_telefono',
                 'u.nombre as vendedor',
